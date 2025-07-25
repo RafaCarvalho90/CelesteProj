@@ -1,68 +1,99 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Painel ESP32 - MQTT</title>
+  <meta charset="UTF-8">
+  <title>Painel MQTT ESP32</title>
   <style>
-    body { font-family: Arial; padding: 20px; background: #f4f4f4; }
-    .card { background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    .label { font-weight: bold; }
-    button { padding: 8px 15px; margin: 5px; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0; padding: 20px;
+      background: #f0f4f8;
+      color: #333;
+    }
+    h2 {
+      color: #005a9c;
+    }
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      max-width: 500px;
+      margin: 20px auto;
+    }
+    .status {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    label {
+      margin-right: 10px;
+    }
+    .rele-group {
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+    input[type="radio"] {
+      margin-right: 5px;
+    }
   </style>
 </head>
 <body>
-  <h2>Painel ESP32 – MQTT via WebSocket</h2>
 
   <div class="card">
-    <p class="label">🌡️ Temperatura: <span id="temp">--</span> °C</p>
-    <p class="label">💧 Umidade: <span id="hum">--</span> %</p>
-  </div>
+    <h2>Painel MQTT</h2>
 
-  <div class="card">
-    <p class="label">🔌 Controle de Relés:</p>
-    <button onclick="sendMessage('celeste/rele1', '1')">Ligar Relé 1</button>
-    <button onclick="sendMessage('celeste/rele1', '0')">Desligar Relé 1</button><br/>
-    <button onclick="sendMessage('celeste/rele2', '1')">Ligar Relé 2</button>
-    <button onclick="sendMessage('celeste/rele2', '0')">Desligar Relé 2</button>
+    <div class="status">🌡️ Temperatura: <span id="temp">--</span> °C</div>
+    <div class="status">💧 Umidade: <span id="hum">--</span> %</div>
+
+    <hr>
+
+    <div>
+      <div class="rele-group">
+        <label><strong>🔌 Relé 1:</strong></label>
+        <label><input type="radio" name="rele1" onclick="sendMessage('celeste/rele1','1')">Ligar</label>
+        <label><input type="radio" name="rele1" onclick="sendMessage('celeste/rele1','0')">Desligar</label>
+      </div>
+
+      <div class="rele-group">
+        <label><strong>🔌 Relé 2:</strong></label>
+        <label><input type="radio" name="rele2" onclick="sendMessage('celeste/rele2','1')">Ligar</label>
+        <label><input type="radio" name="rele2" onclick="sendMessage('celeste/rele2','0')">Desligar</label>
+      </div>
+    </div>
   </div>
 
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script>
-    const options = {
-      connectTimeout: 4000,
-      clientId: 'webClient_' + Math.random().toString(16).substr(2, 8),
+    const client = mqtt.connect('wss://n012989b.ala.us-east-1.emqxsl.com:8084/mqtt', {
+      clientId: 'web_' + Math.random().toString(16).substr(2, 8),
       username: 'Rafa',
       password: 'CelesteTereza',
-      keepalive: 60,
-      clean: true,
-    };
-
-    const WebSocket_URL = 'wss://n012989b.ala.us-east-1.emqxsl.com:8084/mqtt';
-
-    const client = mqtt.connect(WebSocket_URL, options);
+    });
 
     client.on('connect', () => {
-      console.log('✅ Conectado ao broker MQTT via WebSocket');
-
+      console.log('✅ Conectado ao broker MQTT');
       client.subscribe('celeste/temperatura');
       client.subscribe('celeste/umidade');
     });
 
     client.on('message', (topic, message) => {
+      const text = message.toString();
       if (topic === 'celeste/temperatura') {
-        document.getElementById('temp').innerText = message.toString();
+        document.getElementById('temp').innerText = text;
       } else if (topic === 'celeste/umidade') {
-        document.getElementById('hum').innerText = message.toString();
+        document.getElementById('hum').innerText = text;
       }
     });
 
     function sendMessage(topic, value) {
       client.publish(topic, value);
+      console.log(`📨 Enviado: ${topic} → ${value}`);
     }
 
-    client.on('error', (err) => {
-      console.error('❌ Erro na conexão MQTT:', err);
+    client.on('error', err => {
+      console.error('❌ Erro MQTT:', err);
     });
   </script>
+
 </body>
 </html>
