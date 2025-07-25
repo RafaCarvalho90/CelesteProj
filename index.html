@@ -1,46 +1,68 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>ESP32 MQTT Dashboard</title>
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-    <style>
-      body { font-family: sans-serif; max-width: 360px; margin: 2em auto; }
-      h2 { margin-bottom: .4em; }
-      .controls { margin-top: 1em; }
-      button { margin: .2em; padding: .6em 1.2em; }
-    </style>
-  </head>
-  <body>
-    <h2>Leituras</h2>
-    <p>Temp: <span id="temp">--</span> °C</p>
-    <p>Umid: <span id="umid">--</span> %</p>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Painel ESP32 - MQTT</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f4f4f4; }
+    .card { background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .label { font-weight: bold; }
+    button { padding: 8px 15px; margin: 5px; }
+  </style>
+</head>
+<body>
+  <h2>Painel ESP32 – MQTT via WebSocket</h2>
 
-    <div class="controls">
-      <h3>Relés</h3>
-      <button onclick="toggleRele(1,1)">Ligar 1</button>
-      <button onclick="toggleRele(1,0)">Desligar 1</button><br>
-      <button onclick="toggleRele(2,1)">Ligar 2</button>
-      <button onclick="toggleRele(2,0)">Desligar 2</button>
-    </div>
+  <div class="card">
+    <p class="label">🌡️ Temperatura: <span id="temp">--</span> °C</p>
+    <p class="label">💧 Umidade: <span id="hum">--</span> %</p>
+  </div>
 
-    <script>
-      const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
+  <div class="card">
+    <p class="label">🔌 Controle de Relés:</p>
+    <button onclick="sendMessage('celeste/rele1', '1')">Ligar Relé 1</button>
+    <button onclick="sendMessage('celeste/rele1', '0')">Desligar Relé 1</button><br/>
+    <button onclick="sendMessage('celeste/rele2', '1')">Ligar Relé 2</button>
+    <button onclick="sendMessage('celeste/rele2', '0')">Desligar Relé 2</button>
+  </div>
 
-      client.on("connect", () => {
-        client.subscribe("celeste/temperatura");
-        client.subscribe("celeste/umidade");
-      });
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script>
+    const options = {
+      connectTimeout: 4000,
+      clientId: 'webClient_' + Math.random().toString(16).substr(2, 8),
+      username: 'Rafa',
+      password: 'CelesteTereza',
+      keepalive: 60,
+      clean: true,
+    };
 
-      client.on("message", (topic, message) => {
-        const val = message.toString();
-        if (topic.endsWith("temperatura")) document.getElementById("temp").innerText = val;
-        if (topic.endsWith("umidade"))    document.getElementById("umid").innerText = val;
-      });
+    const WebSocket_URL = 'wss://n012989b.ala.us-east-1.emqxsl.com:8084/mqtt';
 
-      function toggleRele(num, estado) {
-        client.publish(`celeste/rele${num}`, String(estado));
+    const client = mqtt.connect(WebSocket_URL, options);
+
+    client.on('connect', () => {
+      console.log('✅ Conectado ao broker MQTT via WebSocket');
+
+      client.subscribe('celeste/temperatura');
+      client.subscribe('celeste/umidade');
+    });
+
+    client.on('message', (topic, message) => {
+      if (topic === 'celeste/temperatura') {
+        document.getElementById('temp').innerText = message.toString();
+      } else if (topic === 'celeste/umidade') {
+        document.getElementById('hum').innerText = message.toString();
       }
-    </script>
-  </body>
+    });
+
+    function sendMessage(topic, value) {
+      client.publish(topic, value);
+    }
+
+    client.on('error', (err) => {
+      console.error('❌ Erro na conexão MQTT:', err);
+    });
+  </script>
+</body>
 </html>
