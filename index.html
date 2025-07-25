@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>ESP32 MQTT Dashboard</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+      body { font-family: sans-serif; max-width: 360px; margin: 2em auto; }
+      h2 { margin-bottom: .4em; }
+      .controls { margin-top: 1em; }
+      button { margin: .2em; padding: .6em 1.2em; }
+    </style>
+  </head>
+  <body>
+    <h2>Leituras</h2>
+    <p>Temp: <span id="temp">--</span> °C</p>
+    <p>Umid: <span id="umid">--</span> %</p>
+
+    <div class="controls">
+      <h3>Relés</h3>
+      <button onclick="toggleRele(1,1)">Ligar 1</button>
+      <button onclick="toggleRele(1,0)">Desligar 1</button><br>
+      <button onclick="toggleRele(2,1)">Ligar 2</button>
+      <button onclick="toggleRele(2,0)">Desligar 2</button>
+    </div>
+
+    <script>
+      const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
+
+      client.on("connect", () => {
+        client.subscribe("celeste/temperatura");
+        client.subscribe("celeste/umidade");
+      });
+
+      client.on("message", (topic, message) => {
+        const val = message.toString();
+        if (topic.endsWith("temperatura")) document.getElementById("temp").innerText = val;
+        if (topic.endsWith("umidade"))    document.getElementById("umid").innerText = val;
+      });
+
+      function toggleRele(num, estado) {
+        client.publish(`celeste/rele${num}`, String(estado));
+      }
+    </script>
+  </body>
+</html>
