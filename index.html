@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Painel MQTT ESP32</title>
+  <title>Painel de Controle - Terrário Celeste</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -49,13 +49,13 @@
 
     <div>
       <div class="rele-group">
-        <label><strong>🔌 Relé 1:</strong></label>
+        <label><strong>🔌 Relé 1 - Aquecimento:</strong></label>
         <label><input type="radio" name="rele1" onclick="sendMessage('celeste/rele1','1')">Ligar</label>
         <label><input type="radio" name="rele1" onclick="sendMessage('celeste/rele1','0')">Desligar</label>
       </div>
 
       <div class="rele-group">
-        <label><strong>🔌 Relé 2:</strong></label>
+        <label><strong>🔌 Relé 2 - Umidificador:</strong></label>
         <label><input type="radio" name="rele2" onclick="sendMessage('celeste/rele2','1')">Ligar</label>
         <label><input type="radio" name="rele2" onclick="sendMessage('celeste/rele2','0')">Desligar</label>
       </div>
